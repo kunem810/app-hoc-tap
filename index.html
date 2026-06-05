@@ -60,7 +60,7 @@
 
     <div class="quiz-container">
         <h1>Thử Thách Toán Lớp 3! 🌟</h1>
-        <div class="score-board" id="thong-tin">Đang kết nối tới máy chủ...</div>
+        <div class="score-board" id="thong-tin">Đang kết nối tới máy chủ mạng...</div>
         <div class="question" id="noi-dung-cau-hoi">Đang tải câu hỏi từ sách Kết nối tri thức...</div>
         <div class="options-container" id="danh-sach-dap-an"></div>
     </div>
@@ -70,18 +70,14 @@
         let viTriCauHoiHienTai = 0;
         let tongDiem = 0;
 
-        // 🚀 ĐOẠN CODE THẦN KỲ: Gọi điện lên Server Python để lấy dữ liệu
+        // 🚀 Gọi điện lên Server Render trên mạng Internet để lấy câu hỏi
         async function taiCauHoiTuServer() {
             try {
-                // Gọi tới "Trạm phát" Python của bạn
-                let phanHoi = await fetch('http://127.0.0.1:8000/lay-cau-hoi');
-                // Chuyển dữ liệu nhận được thành dạng danh sách câu hỏi
+                let phanHoi = await fetch('https://nhhoctap.onrender.com/lay-cau-hoi');
                 nganHangCauHoi = await phanHoi.json();
-                
-                // Sau khi lấy được dữ liệu về thành công thì mới hiển thị câu hỏi đầu tiên
                 hienThiCauHoi();
             } catch (loi) {
-                document.getElementById("noi-dung-cau-hoi").innerText = "Lỗi kết nối tới máy chủ Python rồi ba ơi!";
+                document.getElementById("noi-dung-cau-hoi").innerText = "Không thể kết nối đến máy chủ Render trực tuyến rồi ba ơi!";
                 console.error("Lỗi:", loi);
             }
         }
@@ -122,9 +118,9 @@
                 alert(`Chưa đúng rồi! Cố gắng ở câu sau nhé! 💪`);
             }
 
-            // 🚀 ĐOẠN CODE MỚI: Tự động gửi kết quả về cho máy chủ Python lưu trữ
+            // 🚀 ĐOẠN CODE ĐÃ ĐƯỢC VÁ LỖI ĐỨT ĐIỂM: Tự động đóng gói gửi kết quả lên Render
             try {
-                await fetch('http://127.0.0.1:8000/luu-ket-qua', {
+                await fetch('https://nhhoctap.onrender.com/luu-ket-qua', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -134,7 +130,7 @@
                     })
                 });
             } catch (loi) {
-                console.error("Không thể lưu lịch sử:", loi);
+                console.error("Không thể lưu lịch sử lên hệ thống mạng:", loi);
             }
 
             viTriCauHoiHienTai++;

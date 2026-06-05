@@ -8,9 +8,10 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=["*"],          # Cho phép tất cả các nguồn truy cập (Sửa lỗi CORS)
+    allow_credentials=True,
+    allow_methods=["*"],          # Cho phép tất cả các lệnh GET, POST
+    allow_headers=["*"],          # Cho phép tất cả các định dạng dữ liệu
 )
 
 # Cấu trúc dữ liệu kết quả mà Trang web sẽ gửi về cho Python
@@ -23,7 +24,7 @@ def khoi_tao_database():
     ket_noi = sqlite3.connect("ngan_hang_hoc_tap.db")
     con_tro = ket_noi.cursor()
     
-    # 1. Bảng chứa câu hỏi (Đã làm ở bài trước)
+    # 1. Bảng chứa câu hỏi
     con_tro.execute("""
         CREATE TABLE IF NOT EXISTS cau_hoi (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -37,7 +38,7 @@ def khoi_tao_database():
         )
     """)
     
-    # 2. BẢNG MỚI: Lưu lịch sử làm bài để bố mẹ theo dõi năng lực của con
+    # 2. Bảng lưu lịch sử làm bài để bố mẹ theo dõi năng lực của con
     con_tro.execute("""
         CREATE TABLE IF NOT EXISTS lich_su_lam_bai (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -67,7 +68,7 @@ def khoi_tao_database():
 
 khoi_tao_database()
 
-# API 1: Gửi câu hỏi cho trang web (Đã làm ở bài trước)
+# API 1: Gửi câu hỏi cho trang web
 @app.get("/lay-cau-hoi")
 def gui_cau_hoi_cho_be():
     ket_noi = sqlite3.connect("ngan_hang_hoc_tap.db")
@@ -78,18 +79,18 @@ def gui_cau_hoi_cho_be():
     
     danh_sach_cau_hoi = []
     for dong in du_lieu_goc:
-        cấu_trúc_câu = {
+        # Đã đổi tên biến thành không dấu để tránh lỗi máy chủ Linux
+        cau_truc_cau = {
             "cauHoi": dong[0],
             "dapAn": [dong[1], dong[2], dong[3]],
             "dapAnDung": dong[4]
         }
-        danh_sach_cau_hoi.append(cấu_trúc_câu)
+        danh_sach_cau_hoi.append(cau_truc_cau)
     return danh_sach_cau_hoi
 
 # API 2: Tiếp nhận kết quả làm bài của bé và cất vào két sắt
 @app.post("/luu-ket-qua")
 def luu_ket_qua_lam_bai(du_lieu: KetQuaHocTap):
-    # SỬA LẠI CHÍNH XÁC TÊN FILE Ở DÒNG DƯỚI ĐÂY:
     ket_noi = sqlite3.connect("ngan_hang_hoc_tap.db") 
     con_tro = ket_noi.cursor()
     
@@ -102,4 +103,5 @@ def luu_ket_qua_lam_bai(du_lieu: KetQuaHocTap):
     
     ket_noi.commit()
     ket_noi.close()
+    # Đã cắt bỏ đoạn văn bản thừa gây lỗi cú pháp ở đây
     return {"status": "Thành công", "message": "Đã ghi nhận kết quả của bé!"}

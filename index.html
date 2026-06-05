@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Góc Học Tập Của Bé Lớp 3</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #eef5ff;
+            text-align: center;
+            padding: 50px;
+        }
+        .quiz-container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0px 10px 20px rgba(0,0,0,0.1);
+            display: inline-block;
+            min-width: 450px;
+            max-width: 600px;
+        }
+        h1 { color: #ff6b6b; }
+        .score-board {
+            font-size: 20px;
+            color: #2196F3;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .question { 
+            font-size: 24px; 
+            font-weight: bold; 
+            margin-bottom: 25px; 
+            color: #333;
+        }
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .btn {
+            background-color: #f0f0f0;
+            color: #333;
+            border: 2px solid #ddd;
+            padding: 15px 20px;
+            font-size: 18px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: left;
+            padding-left: 30px;
+        }
+        .btn:hover { 
+            background-color: #e3f2fd; 
+            border-color: #2196F3;
+            transform: scale(1.02); 
+        }
+    </style>
+</head>
+<body>
+
+    <div class="quiz-container">
+        <h1>Thử Thách Toán Lớp 3! 🌟</h1>
+        <div class="score-board" id="thong-tin">Đang kết nối tới máy chủ...</div>
+        <div class="question" id="noi-dung-cau-hoi">Đang tải câu hỏi từ sách Kết nối tri thức...</div>
+        <div class="options-container" id="danh-sach-dap-an"></div>
+    </div>
+
+    <script>
+        let nganHangCauHoi = []; // Lúc đầu danh sách trống rỗng
+        let viTriCauHoiHienTai = 0;
+        let tongDiem = 0;
+
+        // 🚀 ĐOẠN CODE THẦN KỲ: Gọi điện lên Server Python để lấy dữ liệu
+        async function taiCauHoiTuServer() {
+            try {
+                // Gọi tới "Trạm phát" Python của bạn
+                let phanHoi = await fetch('http://127.0.0.1:8000/lay-cau-hoi');
+                // Chuyển dữ liệu nhận được thành dạng danh sách câu hỏi
+                nganHangCauHoi = await phanHoi.json();
+                
+                // Sau khi lấy được dữ liệu về thành công thì mới hiển thị câu hỏi đầu tiên
+                hienThiCauHoi();
+            } catch (loi) {
+                document.getElementById("noi-dung-cau-hoi").innerText = "Lỗi kết nối tới máy chủ Python rồi ba ơi!";
+                console.error("Lỗi:", loi);
+            }
+        }
+
+        function hienThiCauHoi() {
+            if (viTriCauHoiHienTai >= nganHangCauHoi.length) {
+                document.getElementById("noi-dung-cau-hoi").innerHTML = `Chúc mừng con đã hoàn thành! 🎉`;
+                document.getElementById("danh-sach-dap-an").innerHTML = `<h3>Tổng điểm của con là: ${tongDiem} điểm</h3>`;
+                document.getElementById("thong-tin").innerText = `Hoàn thành xuất sắc!`;
+                return;
+            }
+
+            let cauHoiHienTai = nganHangCauHoi[viTriCauHoiHienTai];
+            document.getElementById("thong-tin").innerText = `Điểm: ${tongDiem} | Câu: ${viTriCauHoiHienTai + 1}/${nganHangCauHoi.length}`;
+            document.getElementById("noi-dung-cau-hoi").innerText = cauHoiHienTai.cauHoi;
+
+            let vungChuaNut = document.getElementById("danh-sach-dap-an");
+            vungChuaNut.innerHTML = "";
+
+            cauHoiHienTai.dapAn.forEach(luaChon => {
+                let nutBam = document.createElement("button");
+                nutBam.className = "btn";
+                nutBam.innerText = luaChon;
+                nutBam.onclick = function() { kiemTraDapAn(luaChon); };
+                vungChuaNut.appendChild(nutBam);
+            });
+        }
+
+        async function kiemTraDapAn(dapAnBediChon) {
+            let cauHoiHienTai = nganHangCauHoi[viTriCauHoiHienTai];
+            let dungHaySai = "Sai";
+
+            if (dapAnBediChon.toString() === cauHoiHienTai.dapAnDung.toString()) {
+                alert("Xuất sắc! Đúng rồi con ơi! 🎉 (+10 điểm)");
+                tongDiem += 10;
+                dungHaySai = "Đúng";
+            } else {
+                alert(`Chưa đúng rồi! Cố gắng ở câu sau nhé! 💪`);
+            }
+
+            // 🚀 ĐOẠN CODE MỚI: Tự động gửi kết quả về cho máy chủ Python lưu trữ
+            try {
+                await fetch('http://127.0.0.1:8000/luu-ket-qua', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        cau_hoi: cauHoiHienTai.cauHoi,
+                        dap_an_chon: dapAnBediChon.toString(),
+                        ket_qua: dungHaySai
+                    })
+                });
+            } catch (loi) {
+                console.error("Không thể lưu lịch sử:", loi);
+            }
+
+            viTriCauHoiHienTai++;
+            hienThiCauHoi();
+        }
+
+        // Kích hoạt hàm lấy dữ liệu từ server ngay khi mở trang web
+        taiCauHoiTuServer();
+    </script>
+
+</body>
+</html>
